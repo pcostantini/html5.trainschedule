@@ -3667,9 +3667,9 @@
 
         // SchedulesRepository
         function SchedulesRepository(db) {
-            this.SQL_GET_STATIONS = "select * from Stations"
-            this.SQL_GET_NEXT_TRAIN = "select * from TrainStops where StationId = ? and Time >= ? and Direction = ? and DayType = ? LIMIT 1"
-            this.SQL_GET_TRAIN_ARRIVAL = "select * from TrainStops where TrainId = ? and StationId = ? and Time >= ? and Direction = ? and DayType = ? LIMIT 1"
+            this.SQL_GET_STATIONS = "SELECT Id, Name FROM Stations"
+            this.SQL_GET_NEXT_TRAIN = "SELECT TrainId, Time, StationId FROM TrainStops WHERE StationId = ? AND Time >= ? AND Direction = ? AND DayType = ? LIMIT 1"
+            this.SQL_GET_TRAIN_ARRIVAL = "SELECT TrainId, Time, StationId FROM TrainStops WHERE TrainId = ? AND StationId = ? AND Time >= ? AND Direction = ? AND DayType = ? LIMIT 1"
             
             this.db = db;
             this.sqlErrorCallback = function(tx, error) {
@@ -3726,20 +3726,24 @@
         };
 
         SchedulesRepository.prototype.getTrainSchedule = function(fromStationId, toStationId, time, dayType, callback) {
-            var direction = this.getTrainDirection(fromStationId, toStationId);
-            this.getNextTrain(fromStationId, time, direction, dayType, function(trainStopA) {
-                if (trainStopA == null) {
-                    callback(null, null);
+            var retry = function(departure, arrival, fromStationId, toStationId, time, dayType, callback) {
+                if (arrival != null) {
+                    callback(departure, arrival);
                 } else {
-                    this.getTrainArrival(trainStopA.trainId, toStationId, time, direction, dayType, function(trainStopB) {
-                        if (trainStopB == null) {
-                            callback(null, null);
-                        } else {
-                            callback(trainStopA, trainStopB);
-                        }
-                    });
+                    var direction = this.getTrainDirection(fromStationId, toStationId);
+                    this.getNextTrain(fromStationId, time, direction, dayType, function(departure) {
+                        if (departure == null) return;
+                        time = departure.time + 1;
+                        this.getTrainArrival(departure.trainId, toStationId, time, direction, dayType, function(arrival) {
+                            retry(departure, arrival, fromStationId, toStationId, time, dayType, callback);
+                        });
+                    } .setScope(this));
                 }
-            }.setScope(this));
+            } .setScope(this);
+
+            retry(null, null, fromStationId, toStationId, time, dayType, callback);
+
+            return;
         };
 
         // App Init
@@ -3753,71 +3757,125 @@
                 document.body.addEventListener("online", displayOnlineStatus, true);
                 document.body.addEventListener("offline", displayOnlineStatus, true);
             }
+
+            $("#swapStations").click(function() {
+                load(currToStation, currFromStation);
+            });
         });
 
         var allStations;
-        function initApp(db) {
-            var repo = new SchedulesRepository(db);
+        var repo;
+        var currFromStation;
+        var currToStation;
 
-            repo.getStations(function(stations) { allStations = stations; });
-
-            var origin = 6;
-            var destiny = 21;
-            var time = new Date().getHours() * 60 + new Date().getMinutes();
-            var dayType = 1;
-
-            var curr = 0;
-            var max = 3;
-
-            var retrieveNextSchedule = function() {
-                repo.getTrainSchedule(origin, destiny, time, dayType, function(stopA, stopB) {
+        function retrieveSchedule(fromStation, toStation, time, dayType) {
+            var retrieveNextSchedule = function(fromStation, toStation, time, dayType, top) {
+                repo.getTrainSchedule(fromStation, toStation, time, dayType, function(stopA, stopB) {
                     var li = $("<li></li>").appendTo($("#stops"));
-                    var a = $("<a></a>")
+                    var a = $("<span></span>")
                         .append(stopA.friendlyTime)
-                        .append(" >> ")
+                        .append(" ... ")
                         .append(stopB.friendlyTime)
                         .appendTo(li);
-                    curr++;
                     time = stopA.time + 1;
-                    if (curr < max)
-                        retrieveNextSchedule();
+                    if (top - 1 > 0) retrieveNextSchedule(fromStation, toStation, time, dayType, top - 1);
                 } .setScope(this));
-            };
+            } .setScope(this);
 
-            retrieveNextSchedule();
+            $("#stops").empty();
+            retrieveNextSchedule(fromStation, toStation, time, dayType, 3);
+
+            $("#fromStation").text(getStation(fromStation).name).hide().fadeIn();
+            $("#toStation").text(getStation(toStation).name).hide().fadeIn();
+        }
+
+        function load(fromStation, toStation) {
+            currFromStation = fromStation;
+            currToStation = toStation;
+            $("#fromStation").text("");
+            $("#toStation").text("");
+            retrieveSchedule(fromStation, toStation, new Date().getHours() * 60 + new Date().getMinutes(), 1);
+        }
+        
+        function initApp(db) {
+            repo = new SchedulesRepository(db);
+            repo.getStations(function(stations) {
+                allStations = stations;
+                load(6, 21);
+            });
+        }
+
+        function getStation(id) {
+            for (var i = 0; i < allStations.length; i++) {
+                if (allStations[i].id == id) return allStations[i];
+            }
+
+            return null;
         }
 
         try {
             if (window.openDatabase) {
-                var db = openDatabase("TrainSchedule", "0.1", "Train Schedules Db", 200000);
+                var db = openDatabase("TrainScheduleX", "0.1", "Train Schedules Db", 200000);
                 if (!db) {
                     alert("Failed to open the database on disk.  This is probably because the version was bad or there is not enough space left in this domain's quota");
-                } else {
-                    db.transaction(function(tx) {
-                        tx.executeSql(
-                            "SELECT COUNT(*) FROM Stations",
-                            [],
-                            function(result) { initApp(db); },
-                            function(tx, error) {
-                                db.transaction(
-                                    function(tx) { for (var i = 0; i < script_Create.length; i++) tx.executeSql(script_Create[i]); },
-                                    transactionError,
-                                    initApp);
-                            }
-                        );
-                    });
+                    return;
                 }
-            } else
+                
+                db.transaction(function(tx) {
+                    tx.executeSql(
+                        "SELECT COUNT(*) FROM Stations",
+                        [],
+                        function(result) { initApp(db); },
+                        function(tx, error) {
+                            db.transaction(
+                                function(tx) { for (var i = 0; i < script_Create.length; i++) tx.executeSql(script_Create[i]); },
+                                transactionError,
+                                function() { initApp(db); });
+                        });
+                });
+            } else {
                 alert("Couldn't open the database.  Please try with a WebKit nightly with this feature enabled");
+            }
         } catch (err) { }
     </script>
-
+    <style type="text/css">
+    ul li { color: #ddd; }
+    ul.selector { border: 0; text-align: center; display: block; position: relative; }
+    ul.selector li {
+        background: #4c4d4e;
+        border: 1px solid #333;
+        font-size: 14px;
+        text-align: center;
+        -webkit-border-radius: 8px;
+        -webkit-box-sizing: border-box;
+        display: block;
+        padding: 11px 10px 14px 10px;
+        -webkit-box-shadow: rgba(0,0,0,.2) 1px 1px 3px;
+        background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#4c4d4e), to(#404142));
+        }
+    ul.selector li.a { position: absolute; width: 35%; left: 0px; }
+    ul.selector li.b { width: 60px; text-align: center; margin: auto; padding: 7px 0px 4px 0px; }
+    ul.selector li.c { position: absolute;  width: 35%; right: 0px; top: 0px; }
+    
+    #stops li { text-align: center; }
+    </style>
 </head>
 <body>
     <div id="home" class="current">
         <div class="toolbar">
             <h1>Status (<span id="status">....</span>)</h1>
         </div>
+        <ul class="selector">
+            <li class="a">
+                <span id="fromStation"></span>
+            </li>
+            <li class="b" id="swapStations">
+                <img src="swap.png" alt="swap" width="24" height="24" />
+            </li>
+            <li class="c">
+                <span id="toStation"></span>
+            </li>
+        </ul>
         <ul id="stops" class="rounded">
         </ul>
     </div>
