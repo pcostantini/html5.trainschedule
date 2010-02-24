@@ -1,0 +1,20 @@
+ul li { color: #ddd; }
+    ul.selector { border: 0; text-align: center; display: block; position: relative; }
+    ul.selector li {
+        background: #4c4d4e;
+        border: 1px solid #333;
+        font-size: 14px;
+        text-align: center;
+        -webkit-border-radius: 8px;
+        -webkit-box-sizing: border-box;
+        display: block;
+        padding: 11px 10px 14px 10px;
+        -webkit-box-shadow: rgba(0,0,0,.2) 1px 1px 3px;
+        background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#4c4d4e), to(#404142));
+        }
+    ul.selector li.a { position: absolute; width: 35%; left: 0px; }
+    ul.selector li.b { width: 60px; text-align: center; margin: auto; padding: 7px 0px 4px 0px; }
+    ul.selector li.c { position: absolute;  width: 35%; right: 0px; top: 0px; }
+
+    #stops li { text-align: center; }
+    
