@@ -196,12 +196,13 @@ function bindStations(stations) {
     $.each(stations, function(ix, station) {
         var li = $("<li class='a'></li>").appendTo($("#stations ul"));
         $("<span></span>").appendTo(li)
-        					.append(station.name)
-        					.click(function(e) {
+        				  .append(station.name)
+        			      .click(function(e) {
+        					    e.preventDefault();
         					    var id = station.id;
         					    currFromStation = changingStation == 1 ? id : currFromStation;
         					    currToStation = changingStation == 2 ? id : currToStation;
-        					    console.log(changingStation);
+        					    console.log(currFromStation + "=>" + currToStation);
         					    jQT.goTo("#home");
         					});
     });
@@ -227,7 +228,7 @@ $(document).ready(function() {
         load(currToStation, currFromStation);
     });
 
-    $("#fromStation").tap(function(e) {
+    $("#fromStation").click(function(e) {
         e.preventDefault();
         changingStation = 1;
         jQT.goTo("#stations");
