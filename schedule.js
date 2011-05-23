@@ -196,15 +196,16 @@ function bindStations(stations) {
     $.each(stations, function(ix, station) {
         var li = $("<li class='a'></li>").appendTo($("#stations ul"));
         $("<span></span>").appendTo(li)
-        				  .append(station.name)
-        			      .click(function(e) {
-        					    e.preventDefault();
-        					    var id = station.id;
-        					    currFromStation = changingStation == 1 ? id : currFromStation;
-        					    currToStation = changingStation == 2 ? id : currToStation;
-        					    console.log(currFromStation + "=>" + currToStation);
-        					    jQT.goTo("#home");
-        					});
+        		  .append(station.name)
+		      	  .click(function(e) {
+				    var id = station.id;
+				    currFromStation = changingStation == 1 ? id : currFromStation;
+				    currToStation = changingStation == 2 ? id : currToStation;
+				    console.log(currFromStation + "=>" + currToStation);
+				    jQT.goTo("#home");
+				    
+				    $(".active").removeClass("loading").removeClass("active");
+				});
     });
 }
 
@@ -219,6 +220,7 @@ $(document).ready(function() {
     });
 
     displayOnlineStatus();
+    
     if (document.body) {
         document.body.addEventListener("online", displayOnlineStatus, true);
         document.body.addEventListener("offline", displayOnlineStatus, true);
@@ -229,13 +231,11 @@ $(document).ready(function() {
     });
 
     $("#fromStation").click(function(e) {
-        e.preventDefault();
         changingStation = 1;
         jQT.goTo("#stations");
     });
 
-    $("#toStation").tap(function(e) {
-        e.preventDefault();
+    $("#toStation").click(function(e) {
         changingStation = 2;
         jQT.goTo("#stations");
     });
@@ -255,7 +255,7 @@ $(document).ready(function() {
 							function(result) { initApp(db); },
 							function(tx, error) {
 							    db.transaction(
-									function(tx) { for (var i = 0; i < script_Create.length; i++) tx.executeSql(script_Create[i]); },
+									function(tx) { for (var i = 0; i < IMPORT_DB_SCRIPT.length; i++) tx.executeSql(IMPORT_DB_SCRIPT[i]); },
 									transactionError,
 									function() { initApp(db); });
 							});
