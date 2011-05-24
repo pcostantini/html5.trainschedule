@@ -1,34 +1,39 @@
 <!DOCTYPE HTML>
-<html manifest="schedule.cache">
+<!--html manifest="schedule.cache"-->
 <head>
     <title>TBA[Schedule]</title>
     <meta charset="UTF-8" />
-    <style media="screen"> @import "jqtouch/jqtouch.min.css"; </style>
-    <style media="screen"> @import "themes/jqt/theme.min.css"; </style>
+    <meta name="viewport" content="initial-scale=0, user-scalable=no" />
+    <style media="screen"> @import "jqtouch/jqtouch.css"; </style>
+    <style media="screen"> @import "themes/jqt/theme.css"; </style>
     <style media="screen"> @import "styles.css"; </style>
-    <script src="jqtouch/jquery.1.3.2.min.js"></script>
+    <script src="jqtouch/jquery-1.4.2.min.js"></script>
     <script src="jqtouch/jqtouch.js"></script>
     <script src="db.js"></script>
     <script src="schedule.js"></script>
 </head>
-<body>
+<body id="jqt">
     <div id="home" class="current">
         <div class="toolbar">
             <h1>Status (<span id="status">....</span>)</h1>
         </div>
         <ul class="selector">
             <li class="a">
-                <span id="fromStation"></span>
+                <a id="fromStation" href="javascript:void(0)"></a>
             </li>
             <li class="b" id="swapStations">
                 <img src="swap.png" alt="swap" width="24" height="24" />
             </li>
             <li class="c">
-                <a id="toStation" href="#"></a>
+                <a id="toStation" href="javascript:void(0)"></a>
             </li>
         </ul>
         <ul id="stops" class="rounded">
         </ul>
+
+        <ul class="rounded">
+	        <li><a id="setDefault" href="javascript:void(0)">Set as default stations</a></li>
+	    </ul>
     </div>
 
     <div id="stations">

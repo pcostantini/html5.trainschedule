@@ -142,17 +142,30 @@ var currFromStation;
 var currToStation;
 var changingStation = 0;
 
+function getDefaults() {
+	var from = localStorage.getItem('from');
+	if(!from) from = 1;
+	var to = localStorage.getItem('to');
+	if(!to) to = 21;
+	return { from: from, to: to };
+}
+
+function setDefaults() {
+	localStorage.setItem('from', currFromStation);
+	localStorage.setItem('to', currToStation);
+}
+
 function initApp(db) {
     repo = new SchedulesRepository(db);
     repo.getStations(function(stations) {
         allStations = stations;
         bindStations(stations);
-        load(6, 21);
+        var defaults = getDefaults();
+        load(defaults.from, defaults.to);
     });
 }
 
 function load(fromStation, toStation) {
-    console.log(fromStation + "|" + toStation);
     currFromStation = fromStation;
     currToStation = toStation;
     $("#fromStation").text("");
@@ -163,7 +176,6 @@ function load(fromStation, toStation) {
 function retrieveSchedule(fromStation, toStation, time, dayType) {
     var retrieveNextSchedule = function(fromStation, toStation, time, dayType, top) {
         repo.getTrainSchedule(fromStation, toStation, time, dayType, function(stopA, stopB) {
-            console.log(time);
             var li = $("<li></li>").appendTo($("#stops"));
             var a = $("<time></time>")
                         .append(stopA.friendlyTime)
@@ -195,16 +207,13 @@ function getStation(id) {
 function bindStations(stations) {
     $.each(stations, function(ix, station) {
         var li = $("<li class='a'></li>").appendTo($("#stations ul"));
-        $("<span></span>").appendTo(li)
+        $("<a href='javascript:void(0)'></a>").appendTo(li)
         		  .append(station.name)
 		      	  .click(function(e) {
 				    var id = station.id;
 				    currFromStation = changingStation == 1 ? id : currFromStation;
 				    currToStation = changingStation == 2 ? id : currToStation;
-				    console.log(currFromStation + "=>" + currToStation);
 				    jQT.goTo("#home");
-				    
-				    $(".active").removeClass("loading").removeClass("active");
 				});
     });
 }
@@ -230,14 +239,20 @@ $(document).ready(function() {
         load(currToStation, currFromStation);
     });
 
-    $("#fromStation").click(function(e) {
+    $("#fromStation").click(function() {
         changingStation = 1;
         jQT.goTo("#stations");
     });
 
-    $("#toStation").click(function(e) {
+    $("#toStation").click(function() {
         changingStation = 2;
         jQT.goTo("#stations");
+    });
+    
+    $("#setDefault").click(function() {
+    	if(confirm('Are you sure?')) {
+    		setDefaults();
+    	}
     });
 
     try {

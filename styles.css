@@ -1,5 +1,5 @@
 ul li { color: #ddd; }
-    ul.selector { border: 0; text-align: center; display: block; position: relative; }
+    ul.selector { border: 0 !important; text-align: center; display: block; position: relative; }
     ul.selector li {
         background: #4c4d4e;
         border: 1px solid #333;
@@ -13,8 +13,10 @@ ul li { color: #ddd; }
         background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#4c4d4e), to(#404142));
         }
     ul.selector li.a { position: absolute; width: 35%; left: 0px; }
-    ul.selector li.b { width: 60px; text-align: center; margin: auto; padding: 7px 0px 4px 0px; }
+    ul.selector li.b { width: 60px; text-align: center; margin: auto; padding: 9px 0px 5px 0px !important; }
     ul.selector li.c { position: absolute;  width: 35%; right: 0px; top: 0px; }
 
     #stops li { text-align: center; }
+    #stops time { color: #FC0; }
     
+    #setDefault { text-align: center; clear: both; }

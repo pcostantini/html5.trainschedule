@@ -36,7 +36,7 @@
             cacheStatusValues[5] = 'obsolete';
 
             // Listeners for all possible events
-            var cache = window.applicationCache ? window.applicationCache : document.body;
+            var cache = window.applicationCache;
             cache.addEventListener('cached', logEvent, false);
             cache.addEventListener('checking', logEvent, false);
             cache.addEventListener('downloading', logEvent, false);
