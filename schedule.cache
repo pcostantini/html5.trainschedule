@@ -1,7 +1,6 @@
 CACHE MANIFEST
-db.js
-schedule.cache
 schedule.htm
+db.js
 schedule.js
 startup.png
 styles.css
