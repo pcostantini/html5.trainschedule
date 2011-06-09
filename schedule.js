@@ -213,6 +213,7 @@ function bindStations(stations) {
 				    var id = station.id;
 				    currFromStation = changingStation == 1 ? id : currFromStation;
 				    currToStation = changingStation == 2 ? id : currToStation;
+				    setDefaults();
 				    jQT.goTo("#home");
 				});
     });
@@ -237,6 +238,7 @@ $(document).ready(function() {
 
     $("#swapStations").click(function() {
         load(currToStation, currFromStation);
+	setDefaults();
     });
 
     $("#fromStation").click(function() {
@@ -244,15 +246,10 @@ $(document).ready(function() {
         jQT.goTo("#stations");
     });
 
+
     $("#toStation").click(function() {
         changingStation = 2;
         jQT.goTo("#stations");
-    });
-    
-    $("#setDefault").click(function() {
-    	if(confirm('Are you sure?')) {
-    		setDefaults();
-    	}
     });
 
     try {
